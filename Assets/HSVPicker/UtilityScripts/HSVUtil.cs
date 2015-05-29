@@ -10,6 +10,8 @@ using System;
     public static class HSVUtil
     {
 
+        public static int TopRange = 225;
+
         public static HsvColor ConvertRgbToHsv(Color color)
         {
             return ConvertRgbToHsv((int)(color.r * 255), (int)(color.g * 255), (int)(color.b * 255));
@@ -161,16 +163,16 @@ using System;
 
             //}
 
-            for (int i = 0; i < 359; i++)
+            for (int i = 0; i < TopRange; i++)
             {
 
                 colorsList.Add(
-                    ConvertHsvToRgb(i, 1, 1)
+                    ConvertHsvToRgb(i % 360, 1, 1)
 
                 );
 
             }
-            colorsList.Add(ConvertHsvToRgb(0, 1, 1));
+            //colorsList.Add(ConvertHsvToRgb(0, 1, 1));
 
 
             return colorsList;
@@ -182,10 +184,10 @@ using System;
             var list = GenerateHsvSpectrum();
 
             float interval = 1;
-            if (list.Count > height)
-            {
+            //if (list.Count > height)
+            //{
                 interval = (float)list.Count / height;
-            }
+            //}
 
             var texture = new Texture2D(width, height);
 

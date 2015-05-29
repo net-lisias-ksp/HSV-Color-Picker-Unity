@@ -159,8 +159,12 @@ public class HSVPicker : MonoBehaviour {
     }
 
     public Color GetColor(float posX, float posY)
-	{
-		var color = HSVUtil.ConvertHsvToRgb(pointerPos * -360 + 360, posX, posY);
+    {
+
+        var normalized = HSVUtil.TopRange;
+
+
+        var color = HSVUtil.ConvertHsvToRgb(( pointerPos) * HSVUtil.TopRange, posX, posY);
 
 		return color;
         //Debug.Log(posX + " " + posY);
