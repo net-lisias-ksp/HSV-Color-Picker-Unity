@@ -6,7 +6,7 @@ namespace UnityEngine.UI
 {
 	[AddComponentMenu("UI/BoxSlider", 35)]
 	[RequireComponent(typeof(RectTransform))]
-	public class BoxSlider : Selectable, IDragHandler, IInitializePotentialDragHandler, ICanvasElement
+	public class BoxSlider : Selectable, IDragHandler, IInitializePotentialDragHandler
 	{
 		public enum Direction
 		{
@@ -104,11 +104,6 @@ namespace UnityEngine.UI
 		private BoxSliderEvent m_OnValueChanged = new BoxSliderEvent();
 		public BoxSliderEvent onValueChanged { get { return m_OnValueChanged; } set { m_OnValueChanged = value; } }
 		
-		// Private fields
-		
-        //private Image m_FillImage;
-        //private Transform m_FillTransform;
-        //private RectTransform m_FillContainerRect;
 		private Transform m_HandleTransform;
 		private RectTransform m_HandleContainerRect;
 		
@@ -119,54 +114,6 @@ namespace UnityEngine.UI
 		
 		// Size of each step.
 		float stepSize { get { return wholeNumbers ? 1 : (maxValue - minValue) * 0.1f; } }
-		
-		protected BoxSlider()
-		{ }
-		
-		#if UNITY_EDITOR
-		protected override void OnValidate()
-		{
-			base.OnValidate();
-			
-			if (wholeNumbers)
-			{
-				m_MinValue = Mathf.Round(m_MinValue);
-				m_MaxValue = Mathf.Round(m_MaxValue);
-			}
-
-            //Onvalidate is called before OnEnabled. We need to make sure not to touch any other objects before OnEnable is run.
-            if (IsActive())
-            {
-                UpdateCachedReferences();
-                Set(m_Value, false);
-                SetY(m_ValueY, false);
-                // Update rects since other things might affect them even if value didn't change.
-                UpdateVisuals();
-            }
-
-            var prefabType = UnityEditor.PrefabUtility.GetPrefabType(this);
-			if (prefabType != UnityEditor.PrefabType.Prefab && !Application.isPlaying)
-				CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
-		}
-		#endif // if UNITY_EDITOR
-		
-		public virtual void Rebuild(CanvasUpdate executing)
-		{
-			#if UNITY_EDITOR
-			if (executing == CanvasUpdate.Prelayout)
-				onValueChanged.Invoke(value, valueY);
-			#endif
-		}
-
-	    public void LayoutComplete()
-	    {
-	        
-	    }
-
-	    public void GraphicUpdateComplete()
-	    {
-
-	    }
 
 	    public static bool SetClass<T>(ref T currentValue, T newValue) where T: class
 		{
@@ -274,19 +221,11 @@ namespace UnityEngine.UI
 			Horizontal = 0,
 			Vertical = 1
 		}
-
 		
 		// Force-update the slider. Useful if you've changed the properties and want it to update visually.
 		private void UpdateVisuals()
 		{
-			#if UNITY_EDITOR
-			if (!Application.isPlaying)
-				UpdateCachedReferences();
-			#endif
-			
 			m_Tracker.Clear();
-			
-
 			//to business!
 			if (m_HandleContainerRect != null)
 			{
@@ -356,83 +295,9 @@ namespace UnityEngine.UI
 			UpdateDrag(eventData, eventData.pressEventCamera);
 		}
 		
-        //public override void OnMove(AxisEventData eventData)
-        //{
-        //    if (!IsActive() || !IsInteractable())
-        //    {
-        //        base.OnMove(eventData);
-        //        return;
-        //    }
-			
-        //    switch (eventData.moveDir)
-        //    {
-        //    case MoveDirection.Left:
-        //        if (axis == Axis.Horizontal && FindSelectableOnLeft() == null) {
-        //            Set(reverseValue ? value + stepSize : value - stepSize);
-        //            SetY (reverseValue ? valueY + stepSize : valueY - stepSize);
-        //        }
-        //        else
-        //            base.OnMove(eventData);
-        //        break;
-        //    case MoveDirection.Right:
-        //        if (axis == Axis.Horizontal && FindSelectableOnRight() == null) {
-        //            Set(reverseValue ? value - stepSize : value + stepSize);
-        //            SetY(reverseValue ? valueY - stepSize : valueY + stepSize);
-        //        }
-        //        else
-        //            base.OnMove(eventData);
-        //        break;
-        //    case MoveDirection.Up:
-        //        if (axis == Axis.Vertical && FindSelectableOnUp() == null) {
-        //            Set(reverseValue ? value - stepSize : value + stepSize);
-        //            SetY(reverseValue ? valueY - stepSize : valueY + stepSize);
-        //        }
-        //        else
-        //            base.OnMove(eventData);
-        //        break;
-        //    case MoveDirection.Down:
-        //        if (axis == Axis.Vertical && FindSelectableOnDown() == null) {
-        //            Set(reverseValue ? value + stepSize : value - stepSize);
-        //            SetY(reverseValue ? valueY + stepSize : valueY - stepSize);
-        //        }
-        //        else
-        //            base.OnMove(eventData);
-        //        break;
-        //    }
-        //}
-		
-        //public override Selectable FindSelectableOnLeft()
-        //{
-        //    if (navigation.mode == Navigation.Mode.Automatic && axis == Axis.Horizontal)
-        //        return null;
-        //    return base.FindSelectableOnLeft();
-        //}
-		
-        //public override Selectable FindSelectableOnRight()
-        //{
-        //    if (navigation.mode == Navigation.Mode.Automatic && axis == Axis.Horizontal)
-        //        return null;
-        //    return base.FindSelectableOnRight();
-        //}
-		
-        //public override Selectable FindSelectableOnUp()
-        //{
-        //    if (navigation.mode == Navigation.Mode.Automatic && axis == Axis.Vertical)
-        //        return null;
-        //    return base.FindSelectableOnUp();
-        //}
-		
-        //public override Selectable FindSelectableOnDown()
-        //{
-        //    if (navigation.mode == Navigation.Mode.Automatic && axis == Axis.Vertical)
-        //        return null;
-        //    return base.FindSelectableOnDown();
-        //}
-		
 		public virtual void OnInitializePotentialDrag(PointerEventData eventData)
 		{
 			eventData.useDragThreshold = false;
 		}
-
 	}
 }

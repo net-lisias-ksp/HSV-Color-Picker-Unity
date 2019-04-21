@@ -9,7 +9,7 @@ public class SVBoxSlider : MonoBehaviour
     private BoxSlider slider;
     private RawImage image;
 
-    private ComputeShader compute;
+    public ComputeShader compute;
     private int kernelID;
     private RenderTexture renderTexture;
     private int textureWidth = 100;
@@ -18,13 +18,7 @@ public class SVBoxSlider : MonoBehaviour
     private float lastH = -1;
     private bool listen = true;
 
-    public RectTransform rectTransform
-    {
-        get
-        {
-            return transform as RectTransform;
-        }
-    }
+    public RectTransform rectTransform { get { return transform as RectTransform; } }
 
     private void Awake()
     {
@@ -40,19 +34,29 @@ public class SVBoxSlider : MonoBehaviour
 
     private void InitializeCompute()
     {
+        Debug.Log(string.Format("Compute shader: {0}", compute));//debug
         if ( renderTexture == null )
         {
             renderTexture = new RenderTexture (textureWidth, textureHeight, 0, RenderTextureFormat.RGB111110Float);
             renderTexture.enableRandomWrite = true;
             renderTexture.Create ();
         }
-
-        compute = Resources.Load<ComputeShader> ("Shaders/Compute/GenerateSVTexture");
-        kernelID = compute.FindKernel ("CSMain");
-
+        if(compute != null)
+        {
+            try { kernelID = compute.FindKernel("CSMain"); }
+            catch(UnityException e) 
+            { 
+                Debug.Log("Cannot find the kernel in SV shader: "+ e.Message); 
+                compute = null;
+            }
+        }
+        else
+        {
+            compute = null;
+            Debug.Log("Cannot find compute shader", this);
+        }
         image.texture = renderTexture;
     }
-    
 
     private void OnEnable()
     {
@@ -100,13 +104,11 @@ public class SVBoxSlider : MonoBehaviour
             lastH = h;
             RegenerateSVTexture();
         }
-
         if (!s.Equals(slider.normalizedValue))
         {
             listen = false;
             slider.normalizedValue = s;
         }
-
         if (!v.Equals(slider.normalizedValueY))
         {
             listen = false;
@@ -116,14 +118,12 @@ public class SVBoxSlider : MonoBehaviour
 
     private void RegenerateSVTexture()
     {
-        if ( SystemInfo.supportsComputeShaders )
+        if ( SystemInfo.supportsComputeShaders && compute != null )
         {
             float hue = picker != null ? picker.H : 0;
-
             compute.SetTexture (kernelID, "Texture", renderTexture);
             compute.SetFloats ("TextureSize", textureWidth, textureHeight);
             compute.SetFloat ("Hue", hue);
-
             var threadGroupsX = Mathf.CeilToInt (textureWidth / 32f);
             var threadGroupsY = Mathf.CeilToInt (textureHeight / 32f);
             compute.Dispatch (kernelID, threadGroupsX, threadGroupsY, 1);
@@ -131,24 +131,18 @@ public class SVBoxSlider : MonoBehaviour
         else
         {
             double h = picker != null ? picker.H * 360 : 0;
-
             if ( image.texture != null )
                 DestroyImmediate (image.texture);
-
             var texture = new Texture2D (textureWidth, textureHeight);
             texture.hideFlags = HideFlags.DontSave;
-
             for ( int s = 0; s < textureWidth; s++ )
             {
                 Color32[] colors = new Color32[textureHeight];
                 for ( int v = 0; v < textureHeight; v++ )
-                {
                     colors[v] = HSVUtil.ConvertHsvToRgb (h, (float)s / 100, (float)v / 100, 1);
-                }
                 texture.SetPixels32 (s, 0, 1, textureHeight, colors);
             }
             texture.Apply ();
-
             image.texture = texture;
         }
     }
