@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 /// <summary>
@@ -7,7 +8,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Slider))]
 public class ColorSlider : MonoBehaviour
 {
-    public ColorPicker hsvpicker;
+    [FormerlySerializedAs("hsvpicker")] public ColorPicker hsvPicker;
 
     /// <summary>
     /// Which value this slider can edit.
@@ -21,70 +22,47 @@ public class ColorSlider : MonoBehaviour
     private void Awake()
     {
         slider = GetComponent<Slider>();
-
-        hsvpicker.onValueChanged.AddListener(ColorChanged);
-        hsvpicker.onHSVChanged.AddListener(HSVChanged);
+        hsvPicker.onValueChanged.AddListener(ColorChanged);
+        hsvPicker.onHSVChanged.AddListener(HSVChanged);
         slider.onValueChanged.AddListener(SliderChanged);
     }
 
     private void OnDestroy()
     {
-        hsvpicker.onValueChanged.RemoveListener(ColorChanged);
-        hsvpicker.onHSVChanged.RemoveListener(HSVChanged);
+        hsvPicker.onValueChanged.RemoveListener(ColorChanged);
+        hsvPicker.onHSVChanged.RemoveListener(HSVChanged);
         slider.onValueChanged.RemoveListener(SliderChanged);
     }
 
     private void ColorChanged(Color newColor)
     {
         listen = false;
-        switch (type)
+        slider.normalizedValue = type switch
         {
-            case ColorValues.R:
-                slider.normalizedValue = newColor.r;
-                break;
-            case ColorValues.G:
-                slider.normalizedValue = newColor.g;
-                break;
-            case ColorValues.B:
-                slider.normalizedValue = newColor.b;
-                break;
-            case ColorValues.A:
-                slider.normalizedValue = newColor.a;
-                break;
-            default:
-                break;
-        }
+            ColorValues.R => newColor.r,
+            ColorValues.G => newColor.g,
+            ColorValues.B => newColor.b,
+            ColorValues.A => newColor.a,
+            _ => slider.normalizedValue
+        };
     }
 
     private void HSVChanged(float hue, float saturation, float value)
     {
         listen = false;
-        switch (type)
+        slider.normalizedValue = type switch
         {
-            case ColorValues.Hue:
-                slider.normalizedValue = hue; //1 - hue;
-                break;
-            case ColorValues.Saturation:
-                slider.normalizedValue = saturation;
-                break;
-            case ColorValues.Value:
-                slider.normalizedValue = value;
-                break;
-            default:
-                break;
-        }
+            ColorValues.Hue => hue, //1 - hue;
+            ColorValues.Saturation => saturation,
+            ColorValues.Value => value,
+            _ => slider.normalizedValue
+        };
     }
 
     private void SliderChanged(float newValue)
     {
-        if (listen)
-        {
-            newValue = slider.normalizedValue;
-            //if (type == ColorValues.Hue)
-            //    newValue = 1 - newValue;
-
-            hsvpicker.AssignColor(type, newValue);
-        }
+        if(listen)
+            hsvPicker.AssignColor(type, slider.normalizedValue);
         listen = true;
     }
 }
