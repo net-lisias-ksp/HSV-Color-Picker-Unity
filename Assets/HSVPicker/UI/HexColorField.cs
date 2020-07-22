@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(InputField))]
 public class HexColorField : MonoBehaviour
 {
-    public ColorPicker hsvpicker;
+    [FormerlySerializedAs("hsvpicker")] public ColorPicker hsvPicker;
 
     public bool displayAlpha;
 
@@ -13,16 +14,15 @@ public class HexColorField : MonoBehaviour
     private void Awake()
     {
         hexInputField = GetComponent<InputField>();
-
         // Add listeners to keep text (and color) up to date
         hexInputField.onEndEdit.AddListener(UpdateColor);
-        hsvpicker.onValueChanged.AddListener(UpdateHex);
+        hsvPicker.onValueChanged.AddListener(UpdateHex);
     }
 
     private void OnDestroy()
     {
         hexInputField.onValueChanged.RemoveListener(UpdateColor);
-        hsvpicker.onValueChanged.RemoveListener(UpdateHex);
+        hsvPicker.onValueChanged.RemoveListener(UpdateHex);
     }
 
     private void UpdateHex(Color newColor)
@@ -32,19 +32,19 @@ public class HexColorField : MonoBehaviour
 
     private void UpdateColor(string newHex)
     {
-        Color color;
-        if (!newHex.StartsWith("#"))
-            newHex = "#"+newHex;
-        if (ColorUtility.TryParseHtmlString(newHex, out color))
-            hsvpicker.CurrentColor = color;
+        if(!newHex.StartsWith("#"))
+            newHex = $"#{newHex}";
+        if(ColorUtility.TryParseHtmlString(newHex, out var color))
+            hsvPicker.CurrentColor = color;
         else
-            Debug.Log("hex value is in the wrong format, valid formats are: #RGB, #RGBA, #RRGGBB and #RRGGBBAA (# is optional)");
+            Debug.Log(
+                "hex value is in the wrong format, valid formats are: #RGB, #RGBA, #RRGGBB and #RRGGBBAA (# is optional)");
     }
 
     private string ColorToHex(Color32 color)
     {
         return displayAlpha
-            ? string.Format("#{0:X2}{1:X2}{2:X2}{3:X2}", color.r, color.g, color.b, color.a)
-            : string.Format("#{0:X2}{1:X2}{2:X2}", color.r, color.g, color.b);
+            ? $"#{color.r:X2}{color.g:X2}{color.b:X2}{color.a:X2}"
+            : $"#{color.r:X2}{color.g:X2}{color.b:X2}";
     }
 }
